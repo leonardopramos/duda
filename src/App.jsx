@@ -4,6 +4,8 @@ import Carousel from "./components/Carousel.jsx";
 import YouTubeAutoplay from "./components/YoutubeAutoPlay.jsx";
 import { CONFIG } from "./config.js";
 import { useTicker } from "./lib/time.js";
+import { Volume2 } from "lucide-react";
+
 
 export default function App() {
   const [started, setStarted] = useState(false);
@@ -56,7 +58,7 @@ export default function App() {
                 aria-label="Ativar som"
                 title="Ativar som"
               >
-                🔊
+                <Volume2 size={20} />
               </button>
             )}
           />
