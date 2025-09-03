@@ -17,17 +17,20 @@ export default function Carousel({ images = [] }) {
 
   return (
     <div className="w-full max-w-[780px] mx-auto select-none">
+      {/* A borda arredondada e o overflow-hidden estão NO MESMO ELEMENTO */}
       <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black/20">
-        {/* Altura pensada para fotos em pé */}
+        {/* Altura para foto em pé */}
         <div className="relative w-full h-[80vh] max-h-[960px] min-h-[520px]">
           {images.map((src, i) => (
             <div
               key={src + i}
               className={`absolute inset-0 transition-opacity duration-700 ${
                 i === index ? "opacity-100" : "opacity-0"
-              } pointer-events-none`}  // <= não captura cliques
+              } pointer-events-none overflow-hidden rounded-3xl`}
+              // reforço para Safari/WebKit: clip-path com mesmo raio ~ rounded-3xl (1.5rem)
+              style={{ clipPath: "inset(0 round 1.5rem)" }}
             >
-              {/* Fundo borrado (decoração) */}
+              {/* Fundo borrado – fica CLIPADO pelo overflow/clip-path acima */}
               <img
                 src={src}
                 alt=""
@@ -35,7 +38,8 @@ export default function Carousel({ images = [] }) {
                 aria-hidden
                 draggable={false}
               />
-              {/* Foto principal, sem cortes (vertical) */}
+
+              {/* Foto principal SEM recorte/corte, sempre dentro da moldura */}
               <div className="relative z-10 w-full h-full flex items-center justify-center">
                 <img
                   src={src}
@@ -48,7 +52,7 @@ export default function Carousel({ images = [] }) {
           ))}
         </div>
 
-        {/* Controles */}
+        {/* Controles sobre o slide (com z-index alto e pointer-events) */}
         {len > 1 && (
           <>
             <button
