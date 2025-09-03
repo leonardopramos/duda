@@ -1,16 +1,16 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
- * Autoplay do YouTube vinculado ao gesto do usuário:
- * - Cria o player apenas quando `play` for true
- * - Tenta tocar com som; se o navegador bloquear, faz fallback para mute + play
- * - Não exibe nenhum botão de "ativar som"
+ * Props:
+ * - videoId, play
+ * - renderButton?: ({ onUnmute, visible }) => ReactNode
+ *   Se passado, usa este render para desenhar o botão onde você quiser.
  */
-export default function YouTubeAutoplay({ videoId, play }) {
+export default function YouTubeAutoplay({ videoId, play, renderButton }) {
   const hostRef = useRef(null);
   const playerRef = useRef(null);
+  const [showUnmute, setShowUnmute] = useState(false);
 
-  // Carrega a API uma vez
   useEffect(() => {
     const tagId = "youtube-iframe-api";
     if (!document.getElementById(tagId)) {
@@ -21,9 +21,8 @@ export default function YouTubeAutoplay({ videoId, play }) {
     }
   }, []);
 
-  // Cria o player somente depois do clique (play=true)
   useEffect(() => {
-    if (!play) return;                // ❗ só depois do clique
+    if (!play) return;
     if (!hostRef.current) return;
     if (playerRef.current) return;
 
@@ -43,32 +42,34 @@ export default function YouTubeAutoplay({ videoId, play }) {
           onReady: (e) => {
             const p = e.target;
             try {
-              // 1) tenta tocar COM som
               p.unMute?.();
               p.setVolume?.(100);
               p.playVideo?.();
-            } catch {
-              /* ignore */
-            }
-
-            // 2) checa após 400–600ms; se bloqueou, toca MUTED
+            } catch {}
             setTimeout(() => {
               try {
-                const state = p.getPlayerState?.(); // 1=PLAYING
+                const state = p.getPlayerState?.(); // 1 = PLAYING
                 const muted = p.isMuted?.();
                 if (state !== 1 || muted) {
-                  // garante que pelo menos toca em mute
                   p.mute?.();
                   p.playVideo?.();
+                  setShowUnmute(true);
+                } else {
+                  setShowUnmute(false);
                 }
               } catch {
-                // fallback mudo mesmo assim
-                try {
-                  p.mute?.();
-                  p.playVideo?.();
-                } catch {}
+                try { p.mute?.(); p.playVideo?.(); } finally { setShowUnmute(true); }
               }
             }, 500);
+          },
+          onStateChange: () => {
+            try {
+              const p = playerRef.current;
+              if (!p) return;
+              const muted = p.isMuted?.();
+              const state = p.getPlayerState?.();
+              if (state === 1 && !muted) setShowUnmute(false);
+            } catch {}
           },
         },
       });
@@ -82,21 +83,15 @@ export default function YouTubeAutoplay({ videoId, play }) {
     else window.onYouTubeIframeAPIReady = onAPIReady;
   }, [play, videoId]);
 
-  // Se `play` voltar a false, pausa
   useEffect(() => {
     const p = playerRef.current;
     if (!p) return;
     try {
-      if (play) {
-        // reforça o play (caso tenha recriado o player)
-        p.playVideo?.();
-      } else {
-        p.pauseVideo?.();
-      }
+      if (play) p.playVideo?.();
+      else p.pauseVideo?.();
     } catch {}
   }, [play]);
 
-  // Ajuda alguns navegadores: garante 'allow=autoplay' no iframe assim que existir
   useEffect(() => {
     const p = playerRef.current;
     if (!p) return;
@@ -109,11 +104,39 @@ export default function YouTubeAutoplay({ videoId, play }) {
         }
       } catch {}
     }
-  }, [playerRef.current]);
+  });
+
+  const handleUnmute = () => {
+    try {
+      const p = playerRef.current;
+      if (!p) return;
+      p.unMute?.();
+      p.setVolume?.(100);
+      p.playVideo?.();
+      setShowUnmute(false);
+    } catch {}
+  };
 
   return (
-    <div className="fixed -bottom-96 left-0 w-[320px] h-[180px] opacity-0 pointer-events-none select-none">
-      <div ref={hostRef} className="w-full h-full" />
-    </div>
+    <>
+      {/* iframe fora da tela, só para o áudio */}
+      <div className="fixed -bottom-96 left-0 w-[320px] h-[180px] opacity-0 pointer-events-none select-none">
+        <div ref={hostRef} className="w-full h-full" />
+      </div>
+
+      {/* botão customizável via render prop */}
+      {play && showUnmute && (
+        renderButton
+          ? renderButton({ onUnmute: handleUnmute, visible: showUnmute })
+          : (
+            <button
+              onClick={handleUnmute}
+              className="fixed bottom-4 right-4 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 shadow-lg backdrop-blur z-50"
+            >
+              🔊
+            </button>
+          )
+      )}
+    </>
   );
 }

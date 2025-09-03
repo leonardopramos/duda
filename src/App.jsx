@@ -22,7 +22,11 @@ export default function App() {
 
   if (!started) {
     return (
-      <div className="min-h-screen w-full bg-[#0d141a] text-white flex items-center justify-center p-6 animate-fadeIn">
+      <div
+        className={`min-h-screen w-full bg-[#0d141a] text-white flex items-center justify-center p-6 transition-opacity ${
+          fadeOut ? "opacity-0" : "opacity-100"
+        }`}
+      >
         <div className="text-center space-y-10">
           <h1 className="text-3xl md:text-4xl font-semibold">
             Pronta para começar Duda? ✨
@@ -35,12 +39,28 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0d141a] text-white flex items-center justify-center p-6 animate-fadeIn">
-      {/* Música começa após o clique */}
-      <YouTubeAutoplay videoId={CONFIG.youtubeVideoId} play={started} />
-
       <main className="w-full max-w-6xl mx-auto flex flex-col items-center">
-        {/* Carrossel central */}
-        <Carousel images={CONFIG.images} />
+        {/* Wrapper relativo para posicionar o botão 🔊 na “quininha” do carrossel */}
+        <div className="w-full max-w-[780px] mx-auto relative">
+          {/* Carrossel central */}
+          <Carousel images={CONFIG.images} />
+
+          {/* Música começa após o clique + botão 🔊 no topo-direito do carrossel */}
+          <YouTubeAutoplay
+            videoId={CONFIG.youtubeVideoId}
+            play={started}
+            renderButton={({ onUnmute }) => (
+              <button
+                onClick={onUnmute}
+                className="absolute top-3 right-3 z-50 bg-white/20 hover:bg-white/30 text-white rounded-full p-2.5 shadow-lg backdrop-blur border border-white/20"
+                aria-label="Ativar som"
+                title="Ativar som"
+              >
+                🔊
+              </button>
+            )}
+          />
+        </div>
 
         {/* Título fixo */}
         <h1 className="mt-8 text-2xl md:text-3xl font-semibold text-center">
