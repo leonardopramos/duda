@@ -25,5 +25,12 @@ Quero caminhar contigo em todos os capítulos que ainda vamos escrever, porque n
   images,
 
   // música
-  youtubeVideoId: "4zAThXFOy2c",
+youtubePlaylist: [
+    { id: "ekg_x8EwCnc", startAt: "1:10" }, 
+    { id: "4zAThXFOy2c", startAt: "0:00" }, 
+    { id: "3LmSjmcUNh8", startAt: "1:04" }, 
+    { id: "6eEOegzrwJg", startAt: "1:04" }, 
+    { id: "1ti2YCFgCoI", startAt: "0:16" }, 
+    { id: "jp288zfsNTI", startAt: "0:07" }, 
+  ],
 };
